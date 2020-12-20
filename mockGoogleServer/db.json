@@ -1,0 +1,19 @@
+{
+   "valid_token":{
+      "id":"118135621419358911219",
+      "email":"elpepechatruc@gmail.com",
+      "verified_email":"True",
+      "name":"El Pepe Chatruc",
+      "given_name":"El Pepe",
+      "family_name":"Chatruc",
+      "picture":"https://lh3.googleusercontent.com/cosasaasa",
+      "locale":"es-419"
+   },
+   "invalid_token":{
+      "error":{
+         "code":401,
+         "message":"Request is missing required authentication credential. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+         "status":"UNAUTHENTICATED"
+      }
+   }
+}

@@ -1,0 +1,33 @@
+version: '3.4'
+
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOSTNAME: localhost
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  web_covid:
+    build:
+      context: ${PWD}
+      dockerfile: Dockerfile
+    environment:
+      APP_SETTINGS: config.DevelopmentInDockerConfig
+      FLASK_APP: covidWarnApp
+      FLASK_ENV: development
+      PORT: 5000
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+  google:
+    build:
+      context: ${PWD}
+      dockerfile: ./mockGoogleServer/Dockerfile
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
