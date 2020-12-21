@@ -9,5 +9,10 @@ psycopg2
 pytest~=6.1.1
 flask_expects_json
 SQLAlchemy~=1.3.16
-flasgger
+flasgger~=0.9.5
 flask_mail
+experta~=1.9.4
+pandas~=1.1.5
+numpy~=1.19.4
+TPOT~=0.11.6.post3
+scikit-learn~=0.23.2
