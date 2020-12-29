@@ -1,8 +1,4 @@
-from tpot import TPOTRegressor
-from sklearn.model_selection import train_test_split
 import datetime
-import pandas as pd
-import numpy as np
 from random import choice
 from experta import *
 import requests
@@ -77,17 +73,6 @@ def rule():
         n = date_time_obj.toordinal() - ordinal_first
         lista.append((n, e['Cases']))
 
-    df = pd.DataFrame(lista, columns=['day-number', 'Cases Count'])
-
-    my_tpot = TPOTRegressor()
-    features = df['day-number'].values.reshape((df.shape[0], 1))
-    outcome = df['Cases Count'].values
-    X_train, X_test, y_train, y_test = train_test_split(pd.np.array(features).ravel(), pd.np.array(outcome).ravel(),
-                                                        train_size=0.75, test_size=0.25)
-    print
-    type(X_train)
-    tpot = TPOTRegressor(generations=5, population_size=20, verbosity=2)
-    tpot.fit(X_train, y_train)
 
     engine1 = RobotCrossStreet()
     engine1.reset()
