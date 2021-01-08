@@ -4,7 +4,9 @@ from flask import Blueprint
 from flask import jsonify
 from flasgger.utils import swag_from
 from covidWarnApp import database
+from covidWarnApp.Errors.CovidWarnException import CovidWarnException
 from covidWarnApp.api import COVID_API
+from covidWarnApp.api.utils import validate_number_days_window_delta
 from covidWarnApp.model import RulesParams
 
 bp_params = Blueprint('params', __name__, url_prefix='/params/')
@@ -47,9 +49,13 @@ def business():
 
     params = RulesParams.query.first()
 
-    if 'number_days_window_delta' in put_data:
-        # change first name
-        params.number_days_window_delta = put_data['number_days_window_delta']
+    try:
+        if 'number_days_window_delta' in put_data:
+            validate_number_days_window_delta(put_data['number_days_window_delta'])
+            params.number_days_window_delta = put_data['number_days_window_delta']
+    except CovidWarnException as e:
+        current_app.logger.error("Modification for rule with " + str(put_data) + " failed.")
+        return jsonify({'Error': e.message}), e.error_code
 
     try:
         # commit to persist into the database
