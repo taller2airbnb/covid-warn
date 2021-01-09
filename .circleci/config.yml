@@ -1,0 +1,66 @@
+version: 2.1
+jobs:
+  test:
+    docker:
+      - image: circleci/python:3.6.4 # every job must define an image for the docker executor and subsequent jobs may define a different image.
+      - image: circleci/postgres:9.6.2 # an example of how to specify a service container
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Runing test
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            export APP_SETTINGS="config.TestingWithDBConfig"
+            coverage run -m unittest discover
+            coverage run -m pytest
+            coverage report -m
+
+  build-and-deploy:
+    docker:
+      - image: circleci/python:3.6.4 # every job must define an image for the docker executor and subsequent jobs may define a different image.
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install Python deps in a venv
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Build Docker Image
+          command: docker build -t $IMAGE_NAME:latest .
+      - run:
+          name: "Install Heroku CLI, if necessary"
+          command: |
+            if [[ $(command -v heroku) == "" ]]; then
+              curl https://cli-assets.heroku.com/install.sh | sh
+            else
+              echo "Heroku is already installed. No operation was performed."
+            fi
+      - run:
+          name: Login into Heroku Docker Repository
+          command: |
+            docker login --username=$HEROKU_LOGIN --password=$HEROKU_API_KEY registry.heroku.com
+      - run:
+          name: Deploy Heroku Docker Container
+          command: |
+            heroku container:push web -a taller2airbnb-covidwarn
+            heroku container:release web -a taller2airbnb-covidwarn
+
+workflows:
+  main:
+    jobs:
+      - test
+      - build-and-deploy
