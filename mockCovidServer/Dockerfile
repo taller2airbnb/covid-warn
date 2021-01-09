@@ -1,5 +1,5 @@
 FROM node:12
-WORKDIR /app/mockGoogleServer
+WORKDIR /app/mockCovidServer
 COPY . .
 EXPOSE 3000
 RUN npm install -g json-server

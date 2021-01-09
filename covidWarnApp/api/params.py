@@ -49,6 +49,8 @@ def business():
 
     params = RulesParams.query.first()
 
+    # TODO nuevos params to database
+
     try:
         if 'number_days_window_delta' in put_data:
             validate_number_days_window_delta(put_data['number_days_window_delta'])

@@ -23,10 +23,10 @@ services:
       - db
     ports:
       - "5000:5000"
-  google:
+  covid_server:
     build:
       context: ${PWD}
-      dockerfile: ./mockGoogleServer/Dockerfile
+      dockerfile: ./mockCovidServer/Dockerfile
     environment:
       PORT: 3000
     ports:

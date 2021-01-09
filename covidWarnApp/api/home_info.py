@@ -1,4 +1,4 @@
-import datetime
+from scipy.stats import linregress
 from random import choice
 from experta import *
 import requests
@@ -6,7 +6,7 @@ from flask import Blueprint
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
 
-from covidWarnApp.api import COVID_API
+from covidWarnApp.api.calc_process import process_means
 from covidWarnApp.model import RulesParams
 
 bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')
@@ -71,34 +71,22 @@ def rule(country):
     """
 
     number_days_window_delta = RulesParams.query.first().number_days_window_delta
-    my_list = populate_list(number_days_window_delta, country)
+
+    total_jumps = 3
+    a = range(total_jumps)
+
+    means_list, fatality_rate, active_cases = process_means(country, number_days_window_delta, 14, total_jumps)
+    for result in [means_list, fatality_rate, active_cases]:
+        print(result)
+        print(linregress(a, result))
+    print("...----...")
 
     engine1 = RobotCrossStreet()
     engine1.reset()
     engine1.declare(Light(color=choice(['green', 'yellow', 'blinking-yellow', 'red'])))
     engine1.run()
 
-    return jsonify(my_list), 200
-
-
-def populate_list(number_days_window, country):
-    populated_list = []
-    all_days = requests.get(COVID_API + country)
-    first = True
-    for day in all_days.json():
-        date_time_obj = datetime.datetime.strptime(day['Date'][:10], '%Y-%m-%d')
-        if first:
-            ordinal_first = date_time_obj.toordinal()
-        n = date_time_obj.toordinal() - ordinal_first
-        delta = 0
-        fatality_rate = 0
-        if n > number_days_window:
-            delta = day['Confirmed'] - populated_list[n - number_days_window][1]
-        first = False
-        if day['Confirmed'] > 0:
-            fatality_rate = day['Deaths'] / day['Confirmed']
-        populated_list.append((n, day['Active'], day['Confirmed'], delta, fatality_rate, date_time_obj))
-    return populated_list
+    return jsonify(means_list, fatality_rate, active_cases), 200
 
 
 class Light(Fact):
