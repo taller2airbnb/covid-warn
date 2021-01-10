@@ -82,11 +82,14 @@ def rule(country):
     engine1 = RobotCrossStreet()
     engine1.reset()
     engine1.declare(Data(means_list_slope=processor.means_list_slope))
+    engine1.declare(Data(fatality_rate_range=processor.fatality_rate_range))
+    engine1.declare(Data(fatality_rate_slope=processor.fatality_rate_slope))
+    engine1.declare(Data(active_cases_slope=processor.active_cases_slope))
     engine1.run()
-    print(engine1.algo)
-    print("engine1.algo")
+    print(engine1.alert_color)
+    print("engine1.alert_color")
 
-    return jsonify("Processed", engine1.algo), 200
+    return jsonify({"Color": engine1.alert_color, "Message": engine1.alert_message}), 200
 
 
 class Data(Fact):
@@ -97,12 +100,13 @@ class Data(Fact):
 class RobotCrossStreet(KnowledgeEngine):
     def __init__(self):
         super().__init__()
-        self.algo = ""
+        self.alert_color = "Green"
+        self.alert_message = "It is safe to travel"
 
-    @Rule(Data(means_list_slope='positive'))
-    def green_light(self):
-        self.algo = "Walking"
-        print("Walk")
+    @Rule(Data(fatality_rate_range='above'))
+    def undertesting(self):
+        self.alert_color = "Yellow"
+        self.alert_message = "There could be more cases as a result of undertesting and exceeding the fatality range"
 
     @Rule(Data(color='red'))
     def red_light(self):

@@ -68,6 +68,7 @@ class Processor:
         self.means_list = []
         self.means_list_slope = ''
         self.fatality_rate = []
+        self.fatality_rate_range = 'between range'
         self.fatality_rate_slope = ''
         self.active_cases = []
         self.active_cases_slope = ''
@@ -81,8 +82,16 @@ class Processor:
         self.means_list = means_list
         self.means_list_slope = "positive" if linregress(a, means_list)[0] > 0 else "negative"
 
+        rule_fatality_rate = RulesParams.query.first().fatality_rate
+        fatality_rate_variation = RulesParams.query.first().fatality_rate_variation
+        min_fatality_rate = rule_fatality_rate - fatality_rate_variation
+        max_fatality_rate = rule_fatality_rate + fatality_rate_variation
+
         self.fatality_rate = fatality_rate
         self.fatality_rate_slope = "positive" if linregress(a, fatality_rate)[0] > 0 else "negative"
+
+        if not (min_fatality_rate < fatality_rate[-1] < max_fatality_rate):
+            self.fatality_rate_range = "under" if fatality_rate[-1] < rule_fatality_rate else "above"
 
         self.active_cases = active_cases
         self.active_cases_slope = "positive" if linregress(a, active_cases)[0] > 0 else "negative"
