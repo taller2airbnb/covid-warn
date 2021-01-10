@@ -1,4 +1,3 @@
-from scipy.stats import linregress
 from random import choice
 from experta import *
 import requests
@@ -6,8 +5,7 @@ from flask import Blueprint
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
 
-from covidWarnApp.api.calc_process import process_means
-from covidWarnApp.model import RulesParams
+from covidWarnApp.api.calc_process import Processor
 
 bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')
 
@@ -70,39 +68,46 @@ def rule(country):
         description: Status
     """
 
-    number_days_window_delta = RulesParams.query.first().number_days_window_delta
+    # TODO Make a class, ans instantiate. Then rules modify his state.
 
-    total_jumps = 3
-    a = range(total_jumps)
+    processor = Processor(country)
 
-    means_list, fatality_rate, active_cases = process_means(country, number_days_window_delta, 14, total_jumps)
-    for result in [means_list, fatality_rate, active_cases]:
-        print(result)
-        print(linregress(a, result))
-    print("...----...")
+    processor.process()
+
+    print("processor.active_cases")
+    print(processor.active_cases)
+    print("processor.means_list_slope")
+    print(processor.means_list_slope)
 
     engine1 = RobotCrossStreet()
     engine1.reset()
-    engine1.declare(Light(color=choice(['green', 'yellow', 'blinking-yellow', 'red'])))
+    engine1.declare(Data(means_list_slope=processor.means_list_slope))
     engine1.run()
+    print(engine1.algo)
+    print("engine1.algo")
 
-    return jsonify(means_list, fatality_rate, active_cases), 200
+    return jsonify("Processed", engine1.algo), 200
 
 
-class Light(Fact):
+class Data(Fact):
     """Info about the traffic light."""
     pass
 
 
 class RobotCrossStreet(KnowledgeEngine):
-    @Rule(Light(color='green'))
+    def __init__(self):
+        super().__init__()
+        self.algo = ""
+
+    @Rule(Data(means_list_slope='positive'))
     def green_light(self):
+        self.algo = "Walking"
         print("Walk")
 
-    @Rule(Light(color='red'))
+    @Rule(Data(color='red'))
     def red_light(self):
         print("Don't walk")
 
-    @Rule(AS.light << Light(color=L('yellow') | L('blinking-yellow')))
+    @Rule(AS.light << Data(color=L('yellow') | L('blinking-yellow')))
     def cautious(self, light):
         print("Be cautious because light is", light["color"])

@@ -1,3 +1,5 @@
+from scipy.stats import linregress
+from covidWarnApp.model import RulesParams
 import datetime
 import requests
 import pandas as pd
@@ -55,3 +57,32 @@ def request_all_days_from_country(country):
     except:
         all_days = requests.get(COVID_API + country, verify=False)
     return all_days
+
+
+class Processor:
+    def __init__(self, country):
+        self.country = country
+        self.number_days_window_delta = RulesParams.query.first().number_days_window_delta
+        self.jump_days = RulesParams.query.first().jump_days
+        self.total_jumps = RulesParams.query.first().total_jumps
+        self.means_list = []
+        self.means_list_slope = ''
+        self.fatality_rate = []
+        self.fatality_rate_slope = ''
+        self.active_cases = []
+        self.active_cases_slope = ''
+
+    def process(self):
+        total_jumps = self.total_jumps
+        a = range(total_jumps)
+
+        means_list, fatality_rate, active_cases = process_means(self.country, self.number_days_window_delta,
+                                                                self.jump_days, self.total_jumps)
+        self.means_list = means_list
+        self.means_list_slope = "positive" if linregress(a, means_list)[0] > 0 else "negative"
+
+        self.fatality_rate = fatality_rate
+        self.fatality_rate_slope = "positive" if linregress(a, fatality_rate)[0] > 0 else "negative"
+
+        self.active_cases = active_cases
+        self.active_cases_slope = "positive" if linregress(a, active_cases)[0] > 0 else "negative"
