@@ -43,7 +43,7 @@ def populate_list(number_days_window, country):
         delta = 0
         fatality_rate = 0
         if n > number_days_window:
-            delta = day['Confirmed'] - populated_list[n - number_days_window][1]
+            delta = (day['Confirmed'] - populated_list[n - number_days_window][2]) / number_days_window
         first = False
         if day['Confirmed'] > 0:
             fatality_rate = day['Deaths'] / day['Confirmed']
@@ -72,26 +72,41 @@ class Processor:
         self.fatality_rate_slope = ''
         self.active_cases = []
         self.active_cases_slope = ''
+        self.rep_means_list_slope = ''
+        self.threshold_slope_variation = RulesParams.query.first().threshold_slope_variation
 
     def process(self):
-        total_jumps = self.total_jumps
-        a = range(total_jumps)
-
         means_list, fatality_rate, active_cases = process_means(self.country, self.number_days_window_delta,
                                                                 self.jump_days, self.total_jumps)
         self.means_list = means_list
-        self.means_list_slope = "positive" if linregress(a, means_list)[0] > 0 else "negative"
+        self.fatality_rate = fatality_rate
+        self.active_cases = active_cases
 
+        self.__process_delta_means()
+        self.__process_active_cases()
+        self.__process_fatality_rates()
+
+    def __process_delta_means(self):
+        total_jumps = self.total_jumps
+        val_means_list_slope = linregress(range(total_jumps), self.means_list)[0]
+        self.means_list_slope = "positive" if val_means_list_slope > 0 else "negative"
+        rep_means_list_slope = val_means_list_slope / (sum(self.means_list) / total_jumps)
+        self.rep_means_list_slope = "stable" if (rep_means_list_slope < self.threshold_slope_variation) else "unstable"
+
+    def __process_fatality_rates(self):
+        total_jumps = self.total_jumps
         rule_fatality_rate = RulesParams.query.first().fatality_rate
         fatality_rate_variation = RulesParams.query.first().fatality_rate_variation
         min_fatality_rate = rule_fatality_rate - fatality_rate_variation
         max_fatality_rate = rule_fatality_rate + fatality_rate_variation
 
-        self.fatality_rate = fatality_rate
-        self.fatality_rate_slope = "positive" if linregress(a, fatality_rate)[0] > 0 else "negative"
+        self.fatality_rate_slope = "positive" if linregress(range(total_jumps), self.fatality_rate)[
+                                                     0] > 0 else "negative"
 
-        if not (min_fatality_rate < fatality_rate[-1] < max_fatality_rate):
-            self.fatality_rate_range = "under" if fatality_rate[-1] < rule_fatality_rate else "above"
+        if not (min_fatality_rate < self.fatality_rate[-1] < max_fatality_rate):
+            self.fatality_rate_range = "under" if self.fatality_rate[-1] < rule_fatality_rate else "above"
 
-        self.active_cases = active_cases
-        self.active_cases_slope = "positive" if linregress(a, active_cases)[0] > 0 else "negative"
+    def __process_active_cases(self):
+        total_jumps = self.total_jumps
+
+        self.active_cases_slope = "positive" if linregress(range(total_jumps), self.active_cases)[0] > 0 else "negative"

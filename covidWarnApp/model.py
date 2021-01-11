@@ -9,6 +9,7 @@ DEFAULT_JUMP_DAYS = 14
 DEFAULT_TOTAL_JUMPS = 3
 DEFAULT_FATALITY_RATE = 2.7
 DEFAULT_FATALITY_RATE_VARIATION = 0.1
+DEFAULT_THRESHOLD_SLOPE_VARIATION = 0.15
 
 
 class RulesParams(db.Model):
@@ -18,6 +19,7 @@ class RulesParams(db.Model):
     total_jumps = db.Column(db.Integer, nullable=False, default=DEFAULT_TOTAL_JUMPS)
     fatality_rate = db.Column(db.Float, nullable=False, default=DEFAULT_FATALITY_RATE)
     fatality_rate_variation = db.Column(db.Float, nullable=False, default=DEFAULT_FATALITY_RATE_VARIATION)
+    threshold_slope_variation = db.Column(db.Float, nullable=False, default=DEFAULT_FATALITY_RATE_VARIATION)
 
     def __repr__(self):
         return f"Nation: {self.id}"
@@ -27,5 +29,6 @@ def insert_initial_values():
     db.session.add(RulesParams(id=0, number_days_window_delta=DEFAULT_NUMBER_DAYS_WINDOW_DELTA,
                                jump_days=DEFAULT_JUMP_DAYS, total_jumps=DEFAULT_TOTAL_JUMPS,
                                fatality_rate=DEFAULT_FATALITY_RATE,
-                               fatality_rate_variation=DEFAULT_FATALITY_RATE_VARIATION))
+                               fatality_rate_variation=DEFAULT_FATALITY_RATE_VARIATION,
+                               threshold_slope_variation=DEFAULT_THRESHOLD_SLOPE_VARIATION))
     db.session.commit()

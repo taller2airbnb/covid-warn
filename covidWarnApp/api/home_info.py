@@ -5,7 +5,7 @@ from flask import Blueprint
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
 
-from covidWarnApp.api.calc_process import Processor
+from covidWarnApp.api.processor import Processor
 
 bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')
 
@@ -50,14 +50,14 @@ def health():
     return jsonify({"status": "UP", "from": "CovidWarn"}), 200
 
 
-@bp_homeinfo.route("/rule-test/<string:country>", methods=['GET'])
+@bp_homeinfo.route("/rule-checker/<string:country>", methods=['GET'])
 @swag_from(methods=['GET'])
 def rule(country):
     """
-    Rule Check
+    Rule Checker
     ---
     tags:
-      - health
+      - RETE
     parameters:
       - in: path
         name: country
@@ -77,6 +77,7 @@ def rule(country):
     print("processor.active_cases")
     print(processor.active_cases)
     print("processor.means_list_slope")
+    print(processor.means_list)
     print(processor.means_list_slope)
 
     engine1 = RobotCrossStreet()
