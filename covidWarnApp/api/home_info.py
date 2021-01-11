@@ -1,6 +1,5 @@
 from random import choice
 from experta import *
-import requests
 from flask import Blueprint
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
@@ -14,23 +13,6 @@ bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')
 @swag_from(methods=['GET'])
 def home():
     return render_template("home.html")
-
-
-@bp_homeinfo.route("/business-status")
-@swag_from(methods=['GET'])
-def business():
-    """
-    BusinessCore Health Check
-    To Know if the BusinessCore Service is UP and running.
-    ---
-    tags:
-      - health
-    responses:
-      200:
-        description: Status
-    """
-    response = requests.get('https://taller2airbnb-businesscore.herokuapp.com/health')
-    return response.json()
 
 
 @bp_homeinfo.route("/health", methods=['GET'])
@@ -68,17 +50,21 @@ def rule(country):
         description: Status
     """
 
-    # TODO Make a class, ans instantiate. Then rules modify his state.
-
     processor = Processor(country)
 
     processor.process()
 
     print("processor.active_cases")
     print(processor.active_cases)
+    print(processor.active_cases_slope)
     print("processor.means_list_slope")
     print(processor.means_list)
     print(processor.means_list_slope)
+    print(processor.variation_means_list_slope)
+    print("processor.fatality_rate_range")
+    print(processor.fatality_rate)
+    print(processor.fatality_rate_range)
+    print(processor.fatality_rate_slope)
 
     engine1 = RobotCrossStreet()
     engine1.reset()
@@ -86,15 +72,14 @@ def rule(country):
     engine1.declare(Data(fatality_rate_range=processor.fatality_rate_range))
     engine1.declare(Data(fatality_rate_slope=processor.fatality_rate_slope))
     engine1.declare(Data(active_cases_slope=processor.active_cases_slope))
+    engine1.declare(Data(variation_means_list_slope=processor.variation_means_list_slope))
     engine1.run()
-    print(engine1.alert_color)
-    print("engine1.alert_color")
 
     return jsonify({"Color": engine1.alert_color, "Message": engine1.alert_message}), 200
 
 
 class Data(Fact):
-    """Info about the traffic light."""
+    """Info about the covid calcs."""
     pass
 
 
@@ -104,15 +89,26 @@ class RobotCrossStreet(KnowledgeEngine):
         self.alert_color = "Green"
         self.alert_message = "It is safe to travel"
 
-    @Rule(Data(fatality_rate_range='above'))
+    @Rule(AND(Data(means_list_slope='positive'),
+              Data(variation_means_list_slope='tripling')))
+    def red_increasing_cases(self):
+        self.alert_color = "Red"
+        self.alert_message = "We recommend not to travel since cases are increasing too quickly"
+
+    @Rule(AND(Data(means_list_slope='positive'),
+              Data(variation_means_list_slope='unstable')))
+    def orange_increases(self):
+        self.alert_color = "Orange"
+        self.alert_message = "We suggest not to travel since cases are increasing"
+
+    @Rule(AND(Data(fatality_rate_range='above'),
+          Data(variation_means_list_slope='stable')))
     def undertesting(self):
         self.alert_color = "Yellow"
         self.alert_message = "There could be more cases as a result of undertesting and exceeding the fatality range"
 
-    @Rule(Data(color='red'))
-    def red_light(self):
-        print("Don't walk")
-
-    @Rule(AS.light << Data(color=L('yellow') | L('blinking-yellow')))
-    def cautious(self, light):
-        print("Be cautious because light is", light["color"])
+    @Rule(AND(Data(means_list_slope='positive'), Data(active_cases_slope='positive'),
+              Data(variation_means_list_slope='stable')))
+    def stable_increasing(self):
+        self.alert_color = "Yellow"
+        self.alert_message = "Situation stable but cases in slight increment."

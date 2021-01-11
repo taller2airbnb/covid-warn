@@ -44,6 +44,9 @@ def business():
               fatality_rate_variation:
                 type: number
                 description: variation of fatality rate
+              threshold_slope_variation:
+                type: number
+                description: percentage of variation of cases allowed
     responses:
       200:
         description: A successful user modification.
@@ -79,6 +82,9 @@ def business():
         if 'fatality_rate_variation' in put_data:
             validate_fatality_rate_data(put_data["fatality_rate_variation"])
             params.fatality_rate_variation = put_data['fatality_rate_variation']
+        if 'threshold_slope_variation' in put_data:
+            validate_fatality_rate_data(put_data["threshold_slope_variation"])
+            params.threshold_slope_variation = put_data['threshold_slope_variation']
 
     except CovidWarnException as e:
         current_app.logger.error("Modification for rule with " + str(put_data) + " failed.")

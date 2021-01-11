@@ -72,7 +72,7 @@ class Processor:
         self.fatality_rate_slope = ''
         self.active_cases = []
         self.active_cases_slope = ''
-        self.rep_means_list_slope = ''
+        self.variation_means_list_slope = ''
         self.threshold_slope_variation = RulesParams.query.first().threshold_slope_variation
 
     def process(self):
@@ -91,12 +91,14 @@ class Processor:
         val_means_list_slope = linregress(range(total_jumps), self.means_list)[0]
         self.means_list_slope = "positive" if val_means_list_slope > 0 else "negative"
         rep_means_list_slope = val_means_list_slope / (sum(self.means_list) / total_jumps)
-        self.rep_means_list_slope = "stable" if (rep_means_list_slope < self.threshold_slope_variation) else "unstable"
+        self.variation_means_list_slope = "stable" if (rep_means_list_slope < self.threshold_slope_variation) else "unstable"
+        if rep_means_list_slope >= self.threshold_slope_variation*3:
+            self.variation_means_list_slope = "tripling"
 
     def __process_fatality_rates(self):
         total_jumps = self.total_jumps
-        rule_fatality_rate = RulesParams.query.first().fatality_rate
-        fatality_rate_variation = RulesParams.query.first().fatality_rate_variation
+        rule_fatality_rate = RulesParams.query.first().fatality_rate / 100
+        fatality_rate_variation = RulesParams.query.first().fatality_rate_variation / 100
         min_fatality_rate = rule_fatality_rate - fatality_rate_variation
         max_fatality_rate = rule_fatality_rate + fatality_rate_variation
 
@@ -104,6 +106,7 @@ class Processor:
                                                      0] > 0 else "negative"
 
         if not (min_fatality_rate < self.fatality_rate[-1] < max_fatality_rate):
+            print(min_fatality_rate, self.fatality_rate[-1], max_fatality_rate)
             self.fatality_rate_range = "under" if self.fatality_rate[-1] < rule_fatality_rate else "above"
 
     def __process_active_cases(self):
