@@ -88,7 +88,7 @@ def business():
 
     except CovidWarnException as e:
         current_app.logger.error("Modification for rule with " + str(put_data) + " failed.")
-        return jsonify({'Error': e.message}), e.error_code
+        return jsonify({'Error': e.message, 'Modification':str(put_data)}), e.error_code
 
     try:
         # commit to persist into the database
@@ -98,4 +98,4 @@ def business():
         return jsonify({'Error': "Something happened when attempting to modify rule in the Database"}), 400
 
     current_app.logger.info("Modification for rule with " + str(put_data) + " succeeded.")
-    return jsonify({'rule': params.id, 'modify': 'OK'}), 200
+    return jsonify({'Rule': params.id, 'Modify': 'OK', 'Modification': str(put_data)}), 200

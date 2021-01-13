@@ -1,9 +1,11 @@
+from covidWarnApp.Errors import ProcessorError
 from random import choice
 from experta import *
-from flask import Blueprint
+from flask import Blueprint, current_app
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
 
+from covidWarnApp.Errors import CovidWarnException
 from covidWarnApp.api.processor import Processor
 
 bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')
@@ -49,10 +51,13 @@ def rule(country):
       200:
         description: Status
     """
+    try:
+        processor = Processor(country)
 
-    processor = Processor(country)
-
-    processor.process()
+        processor.process()
+    except CovidWarnException as e:
+        current_app.logger.error("Error while processing " + str(country))
+        return jsonify({'Error': e.message}), e.error_code
 
     print("processor.active_cases")
     print(processor.active_cases)
@@ -75,7 +80,7 @@ def rule(country):
     engine1.declare(Data(variation_means_list_slope=processor.variation_means_list_slope))
     engine1.run()
 
-    return jsonify({"Color": engine1.alert_color, "Message": engine1.alert_message}), 200
+    return jsonify({"Country": processor.country, "Color": engine1.alert_color, "Message": engine1.alert_message}), 200
 
 
 class Data(Fact):
