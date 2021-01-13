@@ -1,11 +1,9 @@
-from covidWarnApp.Errors import ProcessorError
-from random import choice
+from covidWarnApp.Errors.CovidWarnException import CovidWarnException
 from experta import *
 from flask import Blueprint, current_app
 from flask import jsonify, render_template
 from flasgger.utils import swag_from
 
-from covidWarnApp.Errors import CovidWarnException
 from covidWarnApp.api.processor import Processor
 
 bp_homeinfo = Blueprint('status_info', __name__, url_prefix='/')

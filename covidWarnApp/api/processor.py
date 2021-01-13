@@ -38,11 +38,11 @@ class Processor:
     def __process_delta_means(self):
         total_jumps = self.total_jumps
         val_means_list_slope = linregress(range(total_jumps), self.means_list)[0]
-        print("con",val_means_list_slope)
+        print("con", val_means_list_slope)
         self.means_list_slope = "positive" if val_means_list_slope > 0 else "negative"
         rep_means_list_slope = val_means_list_slope / (sum(self.means_list) / total_jumps)
         self.variation_means_list_slope = "stable" if (
-                    rep_means_list_slope < self.threshold_slope_variation) else "unstable"
+                rep_means_list_slope < self.threshold_slope_variation) else "unstable"
         if rep_means_list_slope >= self.threshold_slope_variation * 3:
             self.variation_means_list_slope = "tripling"
 
@@ -63,7 +63,7 @@ class Processor:
     def __process_active_cases(self):
         total_jumps = self.total_jumps
         val_active_cases_slope = linregress(range(total_jumps), self.active_cases)[0]
-        print("ac",val_active_cases_slope)
+        print("ac", val_active_cases_slope)
         self.active_cases_slope = "positive" if val_active_cases_slope > 0 else "negative"
 
     def __process_means(self, country, number_days_window, jump_days, total_jumps):
@@ -115,9 +115,12 @@ class Processor:
             all_days = requests.get(COVID_API + country)
         except requests.exceptions.SSLError:
             all_days = requests.get(COVID_API + country, verify=False)
-        print(all_days.json())
-        if 'message' in all_days.json():
-            if all_days.json()['message'] == 'Not Found':
-                raise ProcessorError.CountryInvalid
+        validate_response_from_api(all_days)
         self.country = all_days.json()[0]['Country']
         return all_days
+
+
+def validate_response_from_api(response):
+    if 'message' in response.json():
+        if response.json()['message'] == 'Not Found':
+            raise ProcessorError.CountryInvalid
