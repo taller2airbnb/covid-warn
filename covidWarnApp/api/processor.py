@@ -116,7 +116,7 @@ class Processor:
         except requests.exceptions.SSLError:
             all_days = requests.get(COVID_API + country, verify=False)
         validate_response_from_api(all_days)
-        self.country = all_days.json()[0]['Country']
+        self.country = get_country_from_api(all_days)
         return all_days
 
 
@@ -124,3 +124,10 @@ def validate_response_from_api(response):
     if 'message' in response.json():
         if response.json()['message'] == 'Not Found':
             raise ProcessorError.CountryInvalid
+
+
+def get_country_from_api(response):
+    if not response.json():
+        raise ProcessorError.EmptyData
+    else:
+        return response.json()[0]['Country']
