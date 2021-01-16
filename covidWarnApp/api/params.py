@@ -12,6 +12,30 @@ from covidWarnApp.model import RulesParams
 bp_params = Blueprint('params', __name__, url_prefix='/params/')
 
 
+@bp_params.route("/", methods=['GET'])
+@swag_from(methods=['GET'])
+def health():
+    """
+    CovidWarn Params
+    Params for metrics and rules
+    ---
+    tags:
+      - params
+    responses:
+      200:
+        description: Status
+    """
+
+    params = RulesParams.query.first()
+
+    return jsonify({'number_days_window_delta': params.number_days_window_delta,
+                    'jump_days': params.jump_days,
+                    'total_jumps': params.total_jumps,
+                    'fatality_rate': params.fatality_rate,
+                    'fatality_rate_variation': params.fatality_rate_variation,
+                    'threshold_slope_variation': params.threshold_slope_variation}), 200
+
+
 @bp_params.route("/", methods=['PUT'])
 @swag_from(methods=['PUT'])
 def business():
@@ -64,8 +88,6 @@ def business():
 
     params = RulesParams.query.first()
 
-    # TODO nuevos params to database
-
     try:
         if 'number_days_window_delta' in put_data:
             validate_number_days_window_delta(put_data["number_days_window_delta"])
@@ -88,7 +110,7 @@ def business():
 
     except CovidWarnException as e:
         current_app.logger.error("Modification for rule with " + str(put_data) + " failed.")
-        return jsonify({'Error': e.message, 'Modification':str(put_data)}), e.error_code
+        return jsonify({'Error': e.message, 'Modification': str(put_data)}), e.error_code
 
     try:
         # commit to persist into the database
