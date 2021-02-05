@@ -115,6 +115,8 @@ class Processor:
             all_days = requests.get(COVID_API + country)
         except requests.exceptions.SSLError:
             all_days = requests.get(COVID_API + country, verify=False)
+        except requests.exceptions.ConnectionError:
+            raise ProcessorError.ConnectionAborted
         validate_response_from_api(all_days)
         self.country = get_country_from_api(all_days)
         return all_days
